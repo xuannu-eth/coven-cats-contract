@@ -24,13 +24,13 @@ describe("CovenCats", function () {
     const [owner] = await ethers.getSigners();
 
     const ownerBalance = await contract.balanceOf(owner.address);
-    expect((await contract.getLastTokenId()).toNumber()).to.equal(ownerBalance);
+    expect((await contract.totalSupply()).toNumber()).to.equal(ownerBalance);
   });
 
   describe("nextTokenId", () => {
     it("starts at tokenId 1", async () => {
       await TestUtils.reserveForGifting(contract, 1);
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(1);
+      expect((await contract.totalSupply()).toNumber()).to.equal(1);
     });
   });
 
@@ -73,7 +73,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
+        expect((await contract.totalSupply()).toNumber()).to.equal(0);
       }
     });
 
@@ -82,7 +82,7 @@ describe("CovenCats", function () {
       await TestUtils.setSalePhase(contract, SalePhase.PUBLIC);
       const [_owner, user] = await ethers.getSigners();
       await TestUtils.mintPublicSale(contract, user, 0);
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
+      expect((await contract.totalSupply()).toNumber()).to.equal(0);
     });
 
     it("doesn't mint if number requested would exceed limit per wallet", async () => {
@@ -97,11 +97,11 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
+        expect((await contract.totalSupply()).toNumber()).to.equal(0);
       }
 
       await TestUtils.mintPublicSale(contract, user, 3);
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
+      expect((await contract.totalSupply()).toNumber()).to.equal(3);
 
       try {
         await TestUtils.mintPublicSale(contract, user, 1);
@@ -110,7 +110,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
+        expect((await contract.totalSupply()).toNumber()).to.equal(3);
       }
     });
 
@@ -122,7 +122,7 @@ describe("CovenCats", function () {
       for (let user of users.slice(0, 6)) {
         await TestUtils.mintPublicSale(contract, user, 1);
       }
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(6);
+      expect((await contract.totalSupply()).toNumber()).to.equal(6);
 
       try {
         await TestUtils.mintPublicSale(contract, user, 2);
@@ -131,11 +131,11 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(6);
+        expect((await contract.totalSupply()).toNumber()).to.equal(6);
       }
 
       await TestUtils.mintPublicSale(contract, user, 1);
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(7);
+      expect((await contract.totalSupply()).toNumber()).to.equal(7);
 
       try {
         await TestUtils.mintPublicSale(contract, user, 1);
@@ -144,7 +144,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(7);
+        expect((await contract.totalSupply()).toNumber()).to.equal(7);
       }
     });
 
@@ -152,7 +152,7 @@ describe("CovenCats", function () {
       // Activate sale
       await TestUtils.setSalePhase(contract, SalePhase.PUBLIC);
       const [_owner, user] = await ethers.getSigners();
-      const ts = await contract.getLastTokenId();
+      const ts = await contract.totalSupply();
 
       try {
         await TestUtils.mintPublicSale(contract, user, 1, "0.05");
@@ -161,7 +161,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
+        expect((await contract.totalSupply()).toNumber()).to.equal(0);
       }
 
       try {
@@ -171,7 +171,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
+        expect((await contract.totalSupply()).toNumber()).to.equal(0);
       }
     });
   });
@@ -238,7 +238,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
+        expect((await contract.totalSupply()).toNumber()).to.equal(0);
       }
     });
 
@@ -259,7 +259,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
+        expect((await contract.totalSupply()).toNumber()).to.equal(0);
       }
     });
 
@@ -273,7 +273,7 @@ describe("CovenCats", function () {
         merkleTree[user.address] ?? [],
         0
       );
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
+      expect((await contract.totalSupply()).toNumber()).to.equal(0);
     });
 
     it("doesn't mint if number requested would exceed limit per wallet", async () => {
@@ -293,7 +293,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
+        expect((await contract.totalSupply()).toNumber()).to.equal(0);
       }
 
       await TestUtils.mintWitchSale(
@@ -302,7 +302,7 @@ describe("CovenCats", function () {
         merkleTree[user.address] ?? [],
         3
       );
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
+      expect((await contract.totalSupply()).toNumber()).to.equal(3);
 
       try {
         await TestUtils.mintWitchSale(
@@ -316,7 +316,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
+        expect((await contract.totalSupply()).toNumber()).to.equal(3);
       }
     });
 
@@ -333,7 +333,7 @@ describe("CovenCats", function () {
           1
         );
       }
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
+      expect((await contract.totalSupply()).toNumber()).to.equal(3);
 
       try {
         await TestUtils.mintWitchSale(
@@ -347,7 +347,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
+        expect((await contract.totalSupply()).toNumber()).to.equal(3);
       }
 
       await TestUtils.mintWitchSale(
@@ -356,7 +356,7 @@ describe("CovenCats", function () {
         merkleTree[user.address] ?? [],
         1
       );
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(4);
+      expect((await contract.totalSupply()).toNumber()).to.equal(4);
 
       try {
         await TestUtils.mintWitchSale(
@@ -370,7 +370,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(4);
+        expect((await contract.totalSupply()).toNumber()).to.equal(4);
       }
     });
 
@@ -378,7 +378,7 @@ describe("CovenCats", function () {
       // Activate sale
       await TestUtils.setSalePhase(contract, SalePhase.WITCH);
       const [_owner, user] = await ethers.getSigners();
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
+      expect((await contract.totalSupply()).toNumber()).to.equal(0);
 
       try {
         await TestUtils.mintWitchSale(
@@ -393,7 +393,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
+        expect((await contract.totalSupply()).toNumber()).to.equal(0);
       }
 
       try {
@@ -409,7 +409,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
+        expect((await contract.totalSupply()).toNumber()).to.equal(0);
       }
     });
   });
@@ -418,13 +418,13 @@ describe("CovenCats", function () {
     it("can reserve cats correctly", async () => {
       const [owner] = await ethers.getSigners();
       await TestUtils.reserveForGifting(contract, 2);
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(2);
+      expect((await contract.totalSupply()).toNumber()).to.equal(2);
 
       expect(await contract.ownerOf("1")).to.equal(owner.address);
       expect(await contract.ownerOf("2")).to.equal(owner.address);
 
       await TestUtils.reserveForGifting(contract, 1);
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
+      expect((await contract.totalSupply()).toNumber()).to.equal(3);
 
       expect(await contract.ownerOf("3")).to.equal(owner.address);
     });
@@ -437,12 +437,12 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
+        expect((await contract.totalSupply()).toNumber()).to.equal(0);
       }
 
       // Reserving under limit should succeed
       await TestUtils.reserveForGifting(contract, 2);
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(2);
+      expect((await contract.totalSupply()).toNumber()).to.equal(2);
 
       try {
         await TestUtils.reserveForGifting(contract, 2);
@@ -451,7 +451,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(2);
+        expect((await contract.totalSupply()).toNumber()).to.equal(2);
       }
     });
 
@@ -459,7 +459,7 @@ describe("CovenCats", function () {
       const [_owner, user1, user2] = await ethers.getSigners();
 
       await TestUtils.giftCats(contract, [user1, user2]);
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(2);
+      expect((await contract.totalSupply()).toNumber()).to.equal(2);
       expect(await contract.ownerOf("1")).to.equal(user1.address);
       expect(await contract.ownerOf("2")).to.equal(user2.address);
     });
@@ -469,11 +469,11 @@ describe("CovenCats", function () {
       await TestUtils.setSalePhase(contract, SalePhase.PUBLIC);
       const [_owner, user1, user2] = await ethers.getSigners();
       await TestUtils.mintPublicSale(contract, user1);
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(1);
+      expect((await contract.totalSupply()).toNumber()).to.equal(1);
       expect(await contract.ownerOf("1")).to.equal(user1.address);
 
       await TestUtils.giftCats(contract, [user1, user2]);
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
+      expect((await contract.totalSupply()).toNumber()).to.equal(3);
       expect(await contract.ownerOf("2")).to.equal(user1.address);
       expect(await contract.ownerOf("3")).to.equal(user2.address);
     });
@@ -481,7 +481,7 @@ describe("CovenCats", function () {
     it("doesn't gift if number requested would exceed max allocation of cats to gift", async () => {
       // Reserve full supply of gifting
       await TestUtils.reserveForGifting(contract, 3);
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
+      expect((await contract.totalSupply()).toNumber()).to.equal(3);
 
       const [_owner, user1, user2] = await ethers.getSigners();
       try {
@@ -491,7 +491,7 @@ describe("CovenCats", function () {
         if (err.toString().includes("AssertionError")) {
           throw err;
         }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
+        expect((await contract.totalSupply()).toNumber()).to.equal(3);
       }
     });
   });
@@ -540,7 +540,7 @@ describe("CovenCats", function () {
   describe("withdraw", () => {
     it("owner can withdraw ether correctly", async () => {
       const [owner, ...users] = await ethers.getSigners();
-      await contract.setIsPublicSaleActive(true);
+      await contract.setSalePhase(SalePhase.PUBLIC);
 
       const startingBalance = await owner.getBalance();
       expect(await contract.provider.getBalance(contract.address)).to.equal(

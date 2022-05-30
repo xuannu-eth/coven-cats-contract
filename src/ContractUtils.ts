@@ -13,16 +13,12 @@ export interface ContractUtils<TContract extends ContractType> {
   attach(contractAddress: string): TContract;
 }
 
-export async function getCovenCats(): Promise<
-  ContractUtils<CovenCats>
-> {
+export async function getCovenCats(): Promise<ContractUtils<CovenCats>> {
   const Contract = await ethers.getContractFactory(CATS_CONTRACT_NAME);
   return {
     deploy: async () => {
       // Deploy a new smart contract, connected to the first signer by default
-      const contract = await Contract.deploy(
-        OPEN_SEA_PROXY_REGISTRY_ADDRESS,
-      );
+      const contract = await Contract.deploy();
 
       await contract.deployed();
 
