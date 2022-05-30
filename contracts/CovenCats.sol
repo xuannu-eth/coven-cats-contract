@@ -278,7 +278,12 @@ contract CovenCats is ERC721AUpgradeable, IERC2981, Ownable, ReentrancyGuard {
 
         return super.isApprovedForAll(owner, operator);
     }
-
+    /**
+     * @dev See {ERC721AUpgradeable-_startTokenId}
+     */
+     function _startTokenId() internal view virtual override returns (uint256){
+         return 1;
+     }
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
