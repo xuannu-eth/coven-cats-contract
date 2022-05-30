@@ -154,7 +154,7 @@ contract CovenCats is ERC721AUpgradeable, IERC2981, Ownable, ReentrancyGuard {
         witchSaleActive
         canMintCats(numberOfTokens)
         maxCatsPerPhase(numberOfTokens)
-        isCorrectPayment(PUBLIC_SALE_PRICE, numberOfTokens)
+        isCorrectPayment(WITCH_SALE_PRICE, numberOfTokens)
         isValidMerkleProof(merkleProof, witchSaleMerkleRoot)
     {
         mintCounts[mintCountsIdentifier()] += numberOfTokens;
