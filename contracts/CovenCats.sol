@@ -20,13 +20,13 @@ contract CovenCats is ERC721AUpgradeable, IERC2981, Ownable, ReentrancyGuard {
     string private baseURI;
     string public verificationHash;
     address private openSeaProxyRegistryAddress;
-    bool private isOpenSeaProxyActive = true;
+    bool private isOpenSeaProxyActive;
 
     bool private initialized;
 
     uint256 public constant MAX_CATS_PER_PHASE = 3;
-    uint256 public MAX_CATS = 9999;
-    uint256 public MAX_GIFTED_CATS = 666;
+    uint256 public constant MAX_CATS = 9999;
+    uint256 public constant MAX_GIFTED_CATS = 666;
     uint256 public numGiftedCats;
 
     enum SalePhase {
@@ -116,6 +116,7 @@ contract CovenCats is ERC721AUpgradeable, IERC2981, Ownable, ReentrancyGuard {
         require(!initialized, "Contract instance has already been initialized");
         initialized = true;
         __ERC721A_init("Coven Cats", "CAT");
+        isOpenSeaProxyActive = true;
     }
 
     // ============ PUBLIC FUNCTIONS FOR MINTING ============
