@@ -1,36 +1,27 @@
 import "@nomiclabs/hardhat-ethers";
 import { ethers } from "hardhat";
-import { CryptoCoven } from "../typechain";
+import { CovenCats } from "../typechain";
 
 import { OPEN_SEA_PROXY_REGISTRY_ADDRESS } from "./Env";
-import { WITCHES_CONTRACT_NAME } from "./contractConstants";
+import { CATS_CONTRACT_NAME } from "./contractConstants";
 
-type ContractType = CryptoCoven;
+type ContractType = CovenCats;
 
-export type CryptoCovenDeployArgs = {
-  maxTokens: number;
-  maxCommunitySaleTokens: number;
-  maxGiftedTokens: number;
-};
-export interface ContractUtils<TContract extends ContractType, TArgs> {
-  deploy(args: TArgs): Promise<TContract>;
+export interface ContractUtils<TContract extends ContractType> {
+  deploy(): Promise<TContract>;
 
   attach(contractAddress: string): TContract;
 }
 
-export async function getCryptoCoven(): Promise<
-  ContractUtils<CryptoCoven, CryptoCovenDeployArgs>
+export async function getCovenCats(): Promise<
+  ContractUtils<CovenCats>
 > {
-  const Contract = await ethers.getContractFactory(WITCHES_CONTRACT_NAME);
+  const Contract = await ethers.getContractFactory(CATS_CONTRACT_NAME);
   return {
-    deploy: async (args: CryptoCovenDeployArgs) => {
-      const { maxTokens, maxCommunitySaleTokens, maxGiftedTokens } = args;
+    deploy: async () => {
       // Deploy a new smart contract, connected to the first signer by default
       const contract = await Contract.deploy(
         OPEN_SEA_PROXY_REGISTRY_ADDRESS,
-        maxTokens,
-        maxCommunitySaleTokens,
-        maxGiftedTokens
       );
 
       await contract.deployed();

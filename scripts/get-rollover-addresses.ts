@@ -8,7 +8,7 @@ import { ethers } from "hardhat";
 const OLD_CONTRACT_ADDRESS = "0xe6dDDa1c3F1cb01Aa5C86a21E8636DEAbfD1F013";
 
 async function main() {
-  const contract = (await ethers.getContractFactory("CryptoCoven")).attach(
+  const contract = (await ethers.getContractFactory("CovenCats")).attach(
     OLD_CONTRACT_ADDRESS
   );
 

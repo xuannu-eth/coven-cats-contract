@@ -3,9 +3,9 @@ import fs from "fs";
 import path from "path";
 import pinataSDK from "@pinata/sdk";
 
-import { WITCHES } from "../src/contractConstants";
+import { CATS } from "../src/contractConstants";
 // import { generateOpenseaMetadataPlaceholder } from "../../server/src/metadataGenerator";
-import { getCryptoCoven } from "../src/ContractUtils";
+import { getCovenCats } from "../src/ContractUtils";
 import { WITCHES_CONTRACT_ADDRESS } from "../src/Env";
 
 const DATA_DIR = path.resolve(
@@ -25,16 +25,16 @@ const UPLOAD_DIR = path.resolve(
   }
   const pinata = pinataSDK(pinataAPIKey, pinataAPISecret);
 
-  const CryptoCoven = await getCryptoCoven();
+  const CovenCats = await getCovenCats();
   if (!WITCHES_CONTRACT_ADDRESS) {
     throw new Error(
       "Target network not set. Please set the WITCHES_CONTRACT_ADDRESS environment variable."
     );
   }
-  const cryptoCoven = CryptoCoven.attach(WITCHES_CONTRACT_ADDRESS);
+  const covenCats = CovenCats.attach(WITCHES_CONTRACT_ADDRESS);
 
   // Query the contract for the total number of witches minted so far.
-  const totalWitchesMinted = (await cryptoCoven.getLastTokenId()).toNumber();
+  const totalWitchesMinted = (await covenCats.getLastTokenId()).toNumber();
 
   console.log(`Clearing upload directory ${UPLOAD_DIR}...`);
   fs.rmSync(UPLOAD_DIR, { recursive: true, force: true });
@@ -52,11 +52,11 @@ const UPLOAD_DIR = path.resolve(
 
   console.log(
     `Creating ${
-      WITCHES.MAX_WITCHES_MINTED - totalWitchesMinted
+      CATS.MAX_CATS_MINTED - totalWitchesMinted
     } metadata placeholder entries in upload directory...`
   );
 
-  for (let i = totalWitchesMinted + 1; i <= WITCHES.MAX_WITCHES_MINTED; ++i) {
+  for (let i = totalWitchesMinted + 1; i <= CATS.MAX_CATS_MINTED; ++i) {
     // relies on internal infrastructure... swapping to a placeholder for the placeholder
     // const metadata = generateOpenseaMetadataPlaceholder();
     const metadata = {};
@@ -79,7 +79,7 @@ const UPLOAD_DIR = path.resolve(
 
     // Update the contract's CID for the new metadata directory.
     console.log("Updating contract with new base URI for the metadata...");
-    await cryptoCoven.setBaseURI(`ipfs://${pinnedObj.IpfsHash}`);
+    await covenCats.setBaseURI(`ipfs://${pinnedObj.IpfsHash}`);
     console.log("Done!");
   } catch (err) {
     console.log(err);
