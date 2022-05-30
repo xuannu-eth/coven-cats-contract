@@ -22,6 +22,8 @@ contract CovenCats is ERC721AUpgradeable, IERC2981, Ownable, ReentrancyGuard {
     address private openSeaProxyRegistryAddress;
     bool private isOpenSeaProxyActive = true;
 
+    bool private initialized;
+
     uint256 public constant MAX_CATS_PER_PHASE = 3;
     uint256 public MAX_CATS = 9999;
     uint256 public MAX_GIFTED_CATS = 666;
@@ -36,7 +38,6 @@ contract CovenCats is ERC721AUpgradeable, IERC2981, Ownable, ReentrancyGuard {
     SalePhase public salePhase = SalePhase.OFF;
 
     uint256 public constant PUBLIC_SALE_PRICE = 0.07 ether;
-
     bytes32 public meowlistSaleMerkleRoot;
 
     uint256 public constant WITCH_SALE_PRICE = 0.05 ether;
@@ -112,6 +113,8 @@ contract CovenCats is ERC721AUpgradeable, IERC2981, Ownable, ReentrancyGuard {
     }
 
     function initialize() public initializerERC721A {
+        require(!initialized, "Contract instance has already been initialized");
+        initialized = true;
         __ERC721A_init("Coven Cats", "CAT");
     }
 
