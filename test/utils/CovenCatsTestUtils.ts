@@ -74,7 +74,7 @@ export async function setMeowListMerkleRoot(
   contract: CovenCats,
   merkleRoot: string
 ) {
-  return await (await contract.setMeowListMerkleRoot(merkleRoot)).wait();
+  return await (await contract.setMeowlistMerkleRoot(merkleRoot)).wait();
 }
 
 export async function reserveForGifting(
@@ -86,7 +86,7 @@ export async function reserveForGifting(
 
 export async function giftCats(contract: CovenCats, users: Signer[]) {
   const addresses = await Promise.all(users.map((user) => user.getAddress()));
-  return await (await contract.giftWitches(addresses)).wait();
+  return await (await contract.giftCats(addresses)).wait();
 }
 
 export async function getRoyaltyInfo(
