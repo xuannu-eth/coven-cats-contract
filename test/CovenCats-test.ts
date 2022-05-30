@@ -1,28 +1,23 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-import { WITCHES } from "../src/contractConstants";
+import { CATS, SalePhase } from "../src/contractConstants";
 import { generateMerkleTree } from "../src/merkle";
 import {
-  getCryptoCoven,
+  getCovenCats,
   ContractUtils,
-  CryptoCovenDeployArgs,
 } from "../src/ContractUtils";
-import * as TestUtils from "./utils/CryptoCovenTestUtils";
-import { CryptoCoven } from "../typechain";
+import * as TestUtils from "./utils/CovenCatsTestUtils";
+import { CovenCats } from "../typechain";
 
-const { COMMUNITY_SALE_PRICE_ETH, PUBLIC_SALE_PRICE_ETH } = WITCHES;
+const { WITCH_SALE_PRICE_ETH, PUBLIC_SALE_PRICE_ETH } = CATS;
 
-describe("CryptoCoven", function () {
-  let contract: CryptoCoven;
-  let CryptoCoven: ContractUtils<CryptoCoven, CryptoCovenDeployArgs>;
+describe("CovenCats", function () {
+  let contract: CovenCats;
+  let CovenCats: ContractUtils<CovenCats>;
   beforeEach(async () => {
-    CryptoCoven = await getCryptoCoven();
-    contract = await CryptoCoven.deploy({
-      maxTokens: 10,
-      maxCommunitySaleTokens: 4,
-      maxGiftedTokens: 3,
-    });
+    CovenCats = await getCovenCats();
+    contract = await CovenCats.deploy();
   });
 
   it("deploys correctly", async function () {
@@ -42,7 +37,7 @@ describe("CryptoCoven", function () {
   describe("mint", () => {
     it("mints correctly when public sale is active", async () => {
       // Activate sale
-      await TestUtils.setPublicSale(contract, true);
+      await TestUtils.setSalePhase(contract, SalePhase.PUBLIC);
       const [_owner, user] = await ethers.getSigners();
 
       // Grab current eth balance on the contract
@@ -84,7 +79,7 @@ describe("CryptoCoven", function () {
 
     it("doesn't mint if number requested is 0", async () => {
       // Activate sale
-      await TestUtils.setPublicSale(contract, true);
+      await TestUtils.setSalePhase(contract, SalePhase.PUBLIC);
       const [_owner, user] = await ethers.getSigners();
       await TestUtils.mintPublicSale(contract, user, 0);
       expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
@@ -92,7 +87,7 @@ describe("CryptoCoven", function () {
 
     it("doesn't mint if number requested would exceed limit per wallet", async () => {
       // Activate sale
-      await TestUtils.setPublicSale(contract, true);
+      await TestUtils.setSalePhase(contract, SalePhase.PUBLIC);
       const [_owner, user] = await ethers.getSigners();
 
       try {
@@ -121,7 +116,7 @@ describe("CryptoCoven", function () {
 
     it("doesn't mint if number requested would exceed max allocation of witches for public sale", async () => {
       // Activate sale
-      await TestUtils.setPublicSale(contract, true);
+      await TestUtils.setSalePhase(contract, SalePhase.PUBLIC);
       const [_owner, user, ...users] = await ethers.getSigners();
       // Mint 6 tokens first
       for (let user of users.slice(0, 6)) {
@@ -155,7 +150,7 @@ describe("CryptoCoven", function () {
 
     it("doesn't mint if eth value sent is insufficient", async () => {
       // Activate sale
-      await TestUtils.setPublicSale(contract, true);
+      await TestUtils.setSalePhase(contract, SalePhase.PUBLIC);
       const [_owner, user] = await ethers.getSigners();
       const ts = await contract.getLastTokenId();
 
@@ -181,21 +176,21 @@ describe("CryptoCoven", function () {
     });
   });
 
-  describe("mintCommunitySale", () => {
+  describe("mintWitchSale", () => {
     let merkleTree: { [key: string]: string[] } = {};
     beforeEach(async () => {
       const [_owner, ...users] = await ethers.getSigners();
-      const communityListAddresses = users
+      const witchListAddresses = users
         .slice(0, 10)
         .map((u: any) => u.address);
-      const [root, tree] = generateMerkleTree(communityListAddresses);
+      const [root, tree] = generateMerkleTree(witchListAddresses);
       merkleTree = tree;
-      await TestUtils.setCommunityListMerkleRoot(contract, root);
+      await TestUtils.setWitchListMerkleRoot(contract, root);
     });
 
-    it("mints correctly when community sale is active", async () => {
+    it("mints correctly when witch sale is active", async () => {
       // Activate sale
-      await TestUtils.setCommunitySale(contract, true);
+      await TestUtils.setSalePhase(contract, SalePhase.WITCH)
       const [_owner, user] = await ethers.getSigners();
 
       // Grab current eth balance on the contract
@@ -204,7 +199,7 @@ describe("CryptoCoven", function () {
       );
 
       // Execute transaction for given user to mint a witch
-      await TestUtils.mintCommunitySale(
+      await TestUtils.mintWitchSale(
         contract,
         user,
         merkleTree[user.address] ?? []
@@ -220,7 +215,7 @@ describe("CryptoCoven", function () {
       expect(
         newEthBalance.eq(
           currentEthBalance.add(
-            ethers.utils.parseEther(COMMUNITY_SALE_PRICE_ETH)
+            ethers.utils.parseEther(WITCH_SALE_PRICE_ETH)
           )
         )
       ).to.be.true;
@@ -228,16 +223,16 @@ describe("CryptoCoven", function () {
       expect(await contract.ownerOf(expectedTokenId)).to.equal(user.address);
     });
 
-    it("doesn't mint if community sale is not active", async () => {
+    it("doesn't mint if witch sale is not active", async () => {
       const [_owner, user] = await ethers.getSigners();
       try {
-        await TestUtils.mintCommunitySale(
+        await TestUtils.mintWitchSale(
           contract,
           user,
           merkleTree[user.address] ?? []
         );
         expect.fail(
-          "Minting community sale should fail user doesn't belong to community list"
+          "Minting witch sale should fail user doesn't belong to witch list"
         );
       } catch (err: any) {
         if (err.toString().includes("AssertionError")) {
@@ -247,19 +242,19 @@ describe("CryptoCoven", function () {
       }
     });
 
-    it("doesn't mint if user doesn't belong to community list", async () => {
+    it("doesn't mint if user doesn't belong to witch list", async () => {
       // Activate sale
-      await TestUtils.setCommunitySale(contract, true);
+      await TestUtils.setSalePhase(contract, SalePhase.WITCH);
       const [_owner, ...users] = await ethers.getSigners();
       const user = users[users.length - 1];
       try {
-        await TestUtils.mintCommunitySale(
+        await TestUtils.mintWitchSale(
           contract,
           user,
           merkleTree[user.address] ?? [],
           0
         );
-        expect.fail("Minting community sale should fail if it's not active");
+        expect.fail("Minting witch sale should fail if it's not active");
       } catch (err: any) {
         if (err.toString().includes("AssertionError")) {
           throw err;
@@ -270,9 +265,9 @@ describe("CryptoCoven", function () {
 
     it("doesn't mint if number requested is 0", async () => {
       // Activate sale
-      await TestUtils.setCommunitySale(contract, true);
+      await TestUtils.setSalePhase(contract, SalePhase.WITCH);
       const [_owner, user] = await ethers.getSigners();
-      await TestUtils.mintCommunitySale(
+      await TestUtils.mintWitchSale(
         contract,
         user,
         merkleTree[user.address] ?? [],
@@ -283,11 +278,11 @@ describe("CryptoCoven", function () {
 
     it("doesn't mint if number requested would exceed limit per wallet", async () => {
       // Activate sale
-      await TestUtils.setCommunitySale(contract, true);
+      await TestUtils.setSalePhase(contract, SalePhase.WITCH);
       const [_owner, user] = await ethers.getSigners();
 
       try {
-        await TestUtils.mintCommunitySale(
+        await TestUtils.mintWitchSale(
           contract,
           user,
           merkleTree[user.address] ?? [],
@@ -301,7 +296,7 @@ describe("CryptoCoven", function () {
         expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
       }
 
-      await TestUtils.mintCommunitySale(
+      await TestUtils.mintWitchSale(
         contract,
         user,
         merkleTree[user.address] ?? [],
@@ -310,7 +305,7 @@ describe("CryptoCoven", function () {
       expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
 
       try {
-        await TestUtils.mintCommunitySale(
+        await TestUtils.mintWitchSale(
           contract,
           user,
           merkleTree[user.address] ?? [],
@@ -325,13 +320,13 @@ describe("CryptoCoven", function () {
       }
     });
 
-    it("doesn't mint if number requested would exceed max allocation of witches for community sale", async () => {
+    it("doesn't mint if number requested would exceed max allocation of cats for witch sale", async () => {
       // Activate sale
-      await TestUtils.setCommunitySale(contract, true);
+      await TestUtils.setSalePhase(contract, SalePhase.WITCH);
       const [_owner, user, ...users] = await ethers.getSigners();
       // Mint 3 tokens first
       for (let user of users.slice(0, 3)) {
-        await TestUtils.mintCommunitySale(
+        await TestUtils.mintWitchSale(
           contract,
           user,
           merkleTree[user.address] ?? [],
@@ -341,7 +336,7 @@ describe("CryptoCoven", function () {
       expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
 
       try {
-        await TestUtils.mintCommunitySale(
+        await TestUtils.mintWitchSale(
           contract,
           user,
           merkleTree[user.address] ?? [],
@@ -355,7 +350,7 @@ describe("CryptoCoven", function () {
         expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
       }
 
-      await TestUtils.mintCommunitySale(
+      await TestUtils.mintWitchSale(
         contract,
         user,
         merkleTree[user.address] ?? [],
@@ -364,7 +359,7 @@ describe("CryptoCoven", function () {
       expect((await contract.getLastTokenId()).toNumber()).to.equal(4);
 
       try {
-        await TestUtils.mintCommunitySale(
+        await TestUtils.mintWitchSale(
           contract,
           user,
           merkleTree[user.address] ?? [],
@@ -381,12 +376,12 @@ describe("CryptoCoven", function () {
 
     it("doesn't mint if eth value sent is insufficient", async () => {
       // Activate sale
-      await TestUtils.setCommunitySale(contract, true);
+      await TestUtils.setSalePhase(contract, SalePhase.WITCH);
       const [_owner, user] = await ethers.getSigners();
       expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
 
       try {
-        await TestUtils.mintCommunitySale(
+        await TestUtils.mintWitchSale(
           contract,
           user,
           merkleTree[user.address] ?? [],
@@ -402,7 +397,7 @@ describe("CryptoCoven", function () {
       }
 
       try {
-        await TestUtils.mintCommunitySale(
+        await TestUtils.mintWitchSale(
           contract,
           user,
           merkleTree[user.address] ?? [],
@@ -415,187 +410,12 @@ describe("CryptoCoven", function () {
           throw err;
         }
         expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
-      }
-    });
-  });
-
-  it("mints correctly when both sales are active", async () => {
-    // Activate sales
-    await TestUtils.setPublicSale(contract, true);
-    await TestUtils.setCommunitySale(contract, true);
-    const [_owner, user1, user2] = await ethers.getSigners();
-
-    // Generate merkle tree
-    const communityListAddresses = [user2.address];
-    const [root, tree] = generateMerkleTree(communityListAddresses);
-    const merkleTree = tree;
-    await TestUtils.setCommunityListMerkleRoot(contract, root);
-
-    // Mint a witch for a user on the public sale
-    await TestUtils.mintPublicSale(contract, user1);
-
-    // Assert the new eth balance in the contract reflects the amount
-    // of eth transfered, and that ownership of the token is reflected.
-    let ethBalance = await contract.provider.getBalance(contract.address);
-    const user1CovenBalance = await contract.balanceOf(user1.address);
-    expect(ethBalance.eq(ethers.utils.parseEther(PUBLIC_SALE_PRICE_ETH))).to.be
-      .true;
-    expect(user1CovenBalance.eq(1)).to.be.true;
-    expect(await contract.ownerOf("1")).to.equal(user1.address);
-
-    // Mint another witch for user on the community list
-    // Execute transaction for given user to mint a witch
-    await TestUtils.mintCommunitySale(
-      contract,
-      user2,
-      merkleTree[user2.address] ?? []
-    );
-
-    // Assert the new eth balance in the contract reflects the amount
-    // of eth transfered, and that ownership of the token is reflected.
-    ethBalance = await contract.provider.getBalance(contract.address);
-    const user2CovenBalance = await contract.balanceOf(user2.address);
-    expect(
-      ethBalance.eq(
-        ethers.utils
-          .parseEther(COMMUNITY_SALE_PRICE_ETH)
-          .add(ethers.utils.parseEther(PUBLIC_SALE_PRICE_ETH))
-      )
-    ).to.be.true;
-    expect(user2CovenBalance.eq(1)).to.be.true;
-    expect(await contract.ownerOf("2")).to.equal(user2.address);
-  });
-
-  describe("claim", () => {
-    let merkleTree: { [key: string]: string[] } = {};
-    beforeEach(async () => {
-      const [_owner, ...users] = await ethers.getSigners();
-      const giveawayListAddresses = users
-        .slice(0, 10)
-        .map((u: any) => u.address);
-      const [root, tree] = generateMerkleTree(giveawayListAddresses);
-      merkleTree = tree;
-      await TestUtils.setClaimListMerkleRoot(contract, root);
-    });
-
-    it("claims correctly", async () => {
-      const [_owner, user] = await ethers.getSigners();
-
-      // Execute transaction for given user to mint a witch
-      await TestUtils.claim(contract, user, merkleTree[user.address] ?? []);
-
-      // Assert that ownership of the token is reflected.
-      const userCovenBalance = await contract.balanceOf(user.address);
-      expect(userCovenBalance.eq(1)).to.be.true;
-      expect(await contract.ownerOf("1")).to.equal(user.address);
-      expect(await contract.getLastTokenId()).to.equal(1);
-    });
-
-    it("claims when at the limit of max allocation", async () => {
-      const [_owner, user, ...users] = await ethers.getSigners();
-      // Reduce max for gifting to be able to exercise this case
-      contract = await CryptoCoven.deploy({
-        maxTokens: 10,
-        maxCommunitySaleTokens: 4,
-        maxGiftedTokens: 1,
-      });
-      const giveawayListAddresses = [user, ...users]
-        .slice(0, 10)
-        .map((u) => u.address);
-      const [root, tree] = generateMerkleTree(giveawayListAddresses);
-      merkleTree = tree;
-      await TestUtils.setClaimListMerkleRoot(contract, root);
-
-      // Activate sale
-      await TestUtils.setPublicSale(contract, true);
-      // Mint max allocation
-      for (let user of users.slice(0, 9)) {
-        await TestUtils.mintPublicSale(contract, user);
-      }
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(9);
-
-      await TestUtils.claim(contract, user, merkleTree[user.address] ?? []);
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(10);
-      expect(await contract.ownerOf("10")).to.equal(user.address);
-    });
-
-    it("doesn't mint if user doesn't belong to claim list", async () => {
-      const [_owner, ...users] = await ethers.getSigners();
-      const user = users[users.length - 1];
-      try {
-        await TestUtils.claim(contract, user, merkleTree[user.address] ?? []);
-        expect.fail(
-          "Claiming should fail if user doesn't belong to claim list"
-        );
-      } catch (err: any) {
-        if (err.toString().includes("AssertionError")) {
-          throw err;
-        }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(0);
-      }
-    });
-
-    it("is able to claim even if max witches per wallet are already minted", async () => {
-      // Activate sale
-      await TestUtils.setPublicSale(contract, true);
-      const [_owner, user] = await ethers.getSigners();
-      for (let i = 0; i < 3; i++) {
-        await TestUtils.mintPublicSale(contract, user);
-      }
-
-      try {
-        await TestUtils.claim(contract, user, merkleTree[user.address] ?? []);
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(4);
-        expect((await contract.balanceOf(user.address)).toNumber()).to.equal(4);
-      } catch (err: any) {
-        if (err.toString().includes("AssertionError")) {
-          throw err;
-        }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
-      }
-    });
-
-    it("doesn't claim if it would exceed max allocation for gifting", async () => {
-      // Activate sale
-      await TestUtils.setPublicSale(contract, true);
-      const [_owner, user] = await ethers.getSigners();
-      for (let i = 0; i < 3; i++) {
-        await TestUtils.giftWitches(contract, [user]);
-      }
-
-      try {
-        await TestUtils.claim(contract, user, merkleTree[user.address] ?? []);
-        expect.fail(
-          "Claiming should fail if it would go over max limit for gifting"
-        );
-      } catch (err: any) {
-        if (err.toString().includes("AssertionError")) {
-          throw err;
-        }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
-      }
-    });
-
-    it("doesn't claim if user has already claimed before", async () => {
-      // Activate sale
-      await TestUtils.setPublicSale(contract, true);
-      const [_owner, user] = await ethers.getSigners();
-      await TestUtils.claim(contract, user, merkleTree[user.address] ?? []);
-
-      try {
-        await TestUtils.claim(contract, user, merkleTree[user.address] ?? []);
-        expect.fail("Claiming should fail if user has claimed before");
-      } catch (err: any) {
-        if (err.toString().includes("AssertionError")) {
-          throw err;
-        }
-        expect((await contract.getLastTokenId()).toNumber()).to.equal(1);
       }
     });
   });
 
   describe("gifting", () => {
-    it("can reserve witches correctly", async () => {
+    it("can reserve cats correctly", async () => {
       const [owner] = await ethers.getSigners();
       await TestUtils.reserveForGifting(contract, 2);
       expect((await contract.getLastTokenId()).toNumber()).to.equal(2);
@@ -635,10 +455,10 @@ describe("CryptoCoven", function () {
       }
     });
 
-    it("can gift witches correctly", async () => {
+    it("can gift cats correctly", async () => {
       const [_owner, user1, user2] = await ethers.getSigners();
 
-      await TestUtils.giftWitches(contract, [user1, user2]);
+      await TestUtils.giftCats(contract, [user1, user2]);
       expect((await contract.getLastTokenId()).toNumber()).to.equal(2);
       expect(await contract.ownerOf("1")).to.equal(user1.address);
       expect(await contract.ownerOf("2")).to.equal(user2.address);
@@ -646,26 +466,26 @@ describe("CryptoCoven", function () {
 
     it("minting then gifting works", async () => {
       // Activate sale
-      await TestUtils.setPublicSale(contract, true);
+      await TestUtils.setSalePhase(contract, SalePhase.PUBLIC);
       const [_owner, user1, user2] = await ethers.getSigners();
       await TestUtils.mintPublicSale(contract, user1);
       expect((await contract.getLastTokenId()).toNumber()).to.equal(1);
       expect(await contract.ownerOf("1")).to.equal(user1.address);
 
-      await TestUtils.giftWitches(contract, [user1, user2]);
+      await TestUtils.giftCats(contract, [user1, user2]);
       expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
       expect(await contract.ownerOf("2")).to.equal(user1.address);
       expect(await contract.ownerOf("3")).to.equal(user2.address);
     });
 
-    it("doesn't gift if number requested would exceed max allocation of witches to figt", async () => {
+    it("doesn't gift if number requested would exceed max allocation of cats to gift", async () => {
       // Reserve full supply of gifting
       await TestUtils.reserveForGifting(contract, 3);
       expect((await contract.getLastTokenId()).toNumber()).to.equal(3);
 
       const [_owner, user1, user2] = await ethers.getSigners();
       try {
-        await TestUtils.giftWitches(contract, [user1, user2]);
+        await TestUtils.giftCats(contract, [user1, user2]);
         expect.fail("Reserving over limit should fail");
       } catch (err: any) {
         if (err.toString().includes("AssertionError")) {
@@ -679,7 +499,7 @@ describe("CryptoCoven", function () {
   describe("royaltyInfo", () => {
     it("provides royalty info as per IERC165 spec", async () => {
       // Activate sale
-      await TestUtils.setPublicSale(contract, true);
+      await TestUtils.setSalePhase(contract, SalePhase.PUBLIC);
       const [_owner, user] = await ethers.getSigners();
 
       // Execute transaction for given user to mint a witch
@@ -751,113 +571,4 @@ describe("CryptoCoven", function () {
     });
   });
 
-  describe("rollover", () => {
-    it("owner can roll over witches from another contract", async () => {
-      const [_, ...users] = await ethers.getSigners();
-      await contract.setIsCommunitySaleActive(true);
-
-      const originalMinters = [users[0], users[1], users[2]];
-      const mintsPerUser = [1, 2, 1];
-
-      // Generate merkle tree
-      const communityListAddresses = originalMinters.map(
-        (minter) => minter.address
-      );
-      const [root, tree] = generateMerkleTree(communityListAddresses);
-      const merkleTree = tree;
-      await TestUtils.setCommunityListMerkleRoot(contract, root);
-
-      // Mint the whole supply
-      for (
-        let minterCount = 0;
-        minterCount < originalMinters.length;
-        minterCount++
-      ) {
-        const currentMinter = originalMinters[minterCount];
-        await TestUtils.mintCommunitySale(
-          contract,
-          currentMinter,
-          merkleTree[currentMinter.address],
-          mintsPerUser[minterCount]
-        );
-      }
-
-      expect((await contract.getLastTokenId()).toNumber()).to.equal(4);
-      expect(await contract.balanceOf(originalMinters[0].address)).to.equal(
-        mintsPerUser[0]
-      );
-      expect(await contract.balanceOf(originalMinters[1].address)).to.equal(
-        mintsPerUser[1]
-      );
-      expect(await contract.balanceOf(originalMinters[2].address)).to.equal(
-        mintsPerUser[2]
-      );
-      expect(
-        (
-          await contract.communityMintCounts(originalMinters[0].address)
-        ).toNumber()
-      ).to.equal(mintsPerUser[0]);
-      expect(
-        (
-          await contract.communityMintCounts(originalMinters[1].address)
-        ).toNumber()
-      ).to.equal(mintsPerUser[1]);
-      expect(
-        (
-          await contract.communityMintCounts(originalMinters[2].address)
-        ).toNumber()
-      ).to.equal(mintsPerUser[2]);
-
-      const newContract = await CryptoCoven.deploy({
-        maxTokens: 10,
-        maxCommunitySaleTokens: 4,
-        maxGiftedTokens: 3,
-      });
-
-      expect((await newContract.getLastTokenId()).toNumber()).to.equal(0);
-
-      const addresses = [];
-      for (
-        let minterCount = 0;
-        minterCount < originalMinters.length;
-        minterCount++
-      ) {
-        for (
-          let mintCount = 0;
-          mintCount < mintsPerUser[minterCount];
-          mintCount++
-        ) {
-          addresses.push(originalMinters[minterCount].address);
-        }
-      }
-      newContract.rollOverWitches(addresses);
-
-      expect((await newContract.getLastTokenId()).toNumber()).to.equal(4);
-      expect(await newContract.balanceOf(originalMinters[0].address)).to.equal(
-        mintsPerUser[0]
-      );
-      expect(await newContract.balanceOf(originalMinters[1].address)).to.equal(
-        mintsPerUser[1]
-      );
-      expect(await newContract.balanceOf(originalMinters[2].address)).to.equal(
-        mintsPerUser[2]
-      );
-
-      expect(
-        (
-          await newContract.communityMintCounts(originalMinters[0].address)
-        ).toNumber()
-      ).to.equal(mintsPerUser[0]);
-      expect(
-        (
-          await newContract.communityMintCounts(originalMinters[1].address)
-        ).toNumber()
-      ).to.equal(mintsPerUser[1]);
-      expect(
-        (
-          await newContract.communityMintCounts(originalMinters[2].address)
-        ).toNumber()
-      ).to.equal(mintsPerUser[2]);
-    });
-  });
 });

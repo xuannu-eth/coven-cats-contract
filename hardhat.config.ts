@@ -16,8 +16,8 @@ import "solidity-coverage";
 
 import { OPEN_SEA_PROXY_REGISTRY_ADDRESS } from "./src/Env";
 import {
-  WITCHES,
-  WITCHES_CONTRACT_NAME,
+  CATS,
+  CATS_CONTRACT_NAME,
   CONTRACT_NAMES,
 } from "./src/contractConstants";
 
@@ -34,7 +34,7 @@ function getContractNameFromArg(contract: string): string {
   let contractName;
   switch (contract) {
     case "witches":
-      contractName = WITCHES_CONTRACT_NAME;
+      contractName = CATS_CONTRACT_NAME;
       break;
     default:
       throw new Error(
@@ -71,7 +71,7 @@ function printConsoleSummary() {
   console.log("");
   console.log(
     `${chalk.bold.whiteBright(
-      'contract = await (await ethers.getContractFactory("CryptoCoven")).attach("'
+      'contract = await (await ethers.getContractFactory("CovenCats")).attach("'
     )}${chalk.bold.green("<ADDRESS_HERE>")}${chalk.bold.gray('");')}`
   );
   console.log("");
@@ -110,7 +110,7 @@ task("coven-compile", "Copies compiled artifacts to the client directory")
   )
   .addOptionalParam(
     "contractName",
-    "The exact name of the contract to compile. Possible values: CryptoCoven."
+    "The exact name of the contract to compile. Possible values: CovenCats."
   )
   .setAction(async (args, hre) => {
     if (!args.noCompile) {
@@ -198,13 +198,9 @@ task(
     console.log("");
 
     try {
-      const { getCryptoCoven } = require("./src/ContractUtils");
-      const CryptoCoven = await getCryptoCoven();
-      const contract = await CryptoCoven.deploy({
-        maxTokens: WITCHES.MAX_WITCHES,
-        maxCommunitySaleTokens: WITCHES.MAX_COMMUNITY_SALE_WITCHES,
-        maxGiftedTokens: WITCHES.MAX_GIFTED_WITCHES,
-      });
+      const { getCovenCats } = require("./src/ContractUtils");
+      const CovenCats = await getCovenCats();
+      const contract = await CovenCats.deploy();
 
       writeFileSync(
         contractMetadataLocation,
@@ -302,9 +298,6 @@ task(
       case "witches":
         constructorArguments = [
           OPEN_SEA_PROXY_REGISTRY_ADDRESS,
-          WITCHES.MAX_WITCHES,
-          WITCHES.MAX_COMMUNITY_SALE_WITCHES,
-          WITCHES.MAX_GIFTED_WITCHES,
         ];
         break;
       case "items":

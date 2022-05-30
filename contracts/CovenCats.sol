@@ -112,11 +112,12 @@ contract CovenCats is ERC721AUpgradeable, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
-    function initialize() public initializerERC721A {
+    function initialize(address _openSeaProxyRegistryAddress) public initializerERC721A {
         require(!initialized, "Contract instance has already been initialized");
         initialized = true;
         __ERC721A_init("Coven Cats", "CAT");
         isOpenSeaProxyActive = true;
+        openSeaProxyRegistryAddress = _openSeaProxyRegistryAddress;
     }
 
     // ============ PUBLIC FUNCTIONS FOR MINTING ============
