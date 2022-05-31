@@ -17,9 +17,9 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract CovenCats is
     ERC721Upgradeable,
-    IERC2981,
     OwnableUpgradeable,
-    ReentrancyGuardUpgradeable
+    ReentrancyGuardUpgradeable,
+    IERC2981
 {
     using Counters for Counters.Counter;
     using Strings for uint256;
@@ -97,7 +97,12 @@ contract CovenCats is
         _;
     }
 
-    modifier isCorrectPayment(uint256 price, uint256 numberOfTokens) {
+    modifier isCorrectPayment(uint256 numberOfTokens) {
+        uint256 price = PUBLIC_SALE_PRICE;
+        if (salePhase == SalePhase.WITCH) {
+            price = WITCH_SALE_PRICE;
+        }
+
         require(
             price * numberOfTokens == msg.value,
             "Incorrect ETH value sent"
@@ -128,54 +133,32 @@ contract CovenCats is
 
     // ============ PUBLIC FUNCTIONS FOR MINTING ============
 
-    function mint(uint256 numberOfTokens)
-        external
-        payable
-        nonReentrant
-        isCorrectPayment(PUBLIC_SALE_PRICE, numberOfTokens)
-        publicSaleActive
-        canMintCats(numberOfTokens)
-        maxCatsPerPhase(numberOfTokens)
-    {
-        mintCounts[mintCountsIdentifier()] += numberOfTokens;
-        for (uint256 i = 0; i < numberOfTokens; i++) {
-            _safeMint(msg.sender, nextTokenId());
-        }
+    function mint(uint256 numberOfTokens) external payable publicSaleActive {
+        mintCats(numberOfTokens);
     }
 
     function mintMeowlistSale(
-        uint8 numberOfTokens,
+        uint256 numberOfTokens,
         bytes32[] calldata merkleProof
     )
         external
         payable
-        nonReentrant
         meowlistSaleActive
-        canMintCats(numberOfTokens)
-        maxCatsPerPhase(numberOfTokens)
-        isCorrectPayment(PUBLIC_SALE_PRICE, numberOfTokens)
         isValidMerkleProof(merkleProof, meowlistSaleMerkleRoot)
     {
-        mintCounts[mintCountsIdentifier()] += numberOfTokens;
-        for (uint256 i = 0; i < numberOfTokens; i++) {
-            _safeMint(msg.sender, nextTokenId());
-        }
+        mintCats(numberOfTokens);
     }
 
-    function mintWitchSale(uint8 numberOfTokens, bytes32[] calldata merkleProof)
+    function mintWitchSale(
+        uint256 numberOfTokens,
+        bytes32[] calldata merkleProof
+    )
         external
         payable
-        nonReentrant
         witchSaleActive
-        canMintCats(numberOfTokens)
-        maxCatsPerPhase(numberOfTokens)
-        isCorrectPayment(WITCH_SALE_PRICE, numberOfTokens)
         isValidMerkleProof(merkleProof, witchSaleMerkleRoot)
     {
-        mintCounts[mintCountsIdentifier()] += numberOfTokens;
-        for (uint256 i = 0; i < numberOfTokens; i++) {
-            _safeMint(msg.sender, nextTokenId());
-        }
+        mintCats(numberOfTokens);
     }
 
     // ============ PUBLIC READ-ONLY FUNCTIONS ============
@@ -252,6 +235,19 @@ contract CovenCats is
     }
 
     // ============ SUPPORTING FUNCTIONS ============
+
+    function mintCats(uint256 numberOfTokens)
+        private
+        nonReentrant
+        isCorrectPayment(numberOfTokens)
+        canMintCats(numberOfTokens)
+        maxCatsPerPhase(numberOfTokens)
+    {
+        mintCounts[mintCountsIdentifier()] += numberOfTokens;
+        for (uint256 i = 0; i < numberOfTokens; i++) {
+            _safeMint(msg.sender, nextTokenId());
+        }
+    }
 
     function nextTokenId() private returns (uint256) {
         tokenCounter.increment();
