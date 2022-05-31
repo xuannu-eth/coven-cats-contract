@@ -28,6 +28,10 @@ contract CovenCats is
 
     string private baseURI;
     bool private isOpenSeaProxyActive;
+    address private constant openSeaProxyRegistryAddress =
+        0xa5409ec958C83C3f309868babACA7c86DCB077c1;
+    address private constant multisigReceiverAddress =
+        0x530a43fB4AB0Dd38009d4420bFA852391F4059A1;
 
     uint256 public constant MAX_CATS_PER_PHASE = 3;
     uint256 public constant MAX_CATS = 9999;
@@ -198,18 +202,6 @@ contract CovenCats is
         witchSaleMerkleRoot = merkleRoot;
     }
 
-    function reserveForGifting(uint256 numToReserve)
-        external
-        nonReentrant
-        onlyOwner
-        canGiftCats(numToReserve)
-    {
-        numGiftedCats += numToReserve;
-        for (uint256 i = 0; i < numToReserve; i++) {
-            _safeMint(msg.sender, nextTokenId());
-        }
-    }
-
     function giftCats(address[] calldata addresses)
         external
         nonReentrant
@@ -226,12 +218,12 @@ contract CovenCats is
 
     function withdraw() public onlyOwner {
         uint256 balance = address(this).balance;
-        payable(msg.sender).transfer(balance);
+        payable(multisigReceiverAddress).transfer(balance);
     }
 
     function withdrawTokens(IERC20 token) public onlyOwner {
         uint256 balance = token.balanceOf(address(this));
-        token.transfer(msg.sender, balance);
+        token.transfer(multisigReceiverAddress, balance);
     }
 
     // ============ SUPPORTING FUNCTIONS ============
@@ -284,7 +276,7 @@ contract CovenCats is
         // Get a reference to OpenSea's proxy registry contract by instantiating
         // the contract using the already existing address.
         ProxyRegistry proxyRegistry = ProxyRegistry(
-            0xa5409ec958C83C3f309868babACA7c86DCB077c1
+            openSeaProxyRegistryAddress
         );
         if (
             isOpenSeaProxyActive &&
@@ -323,7 +315,10 @@ contract CovenCats is
     {
         require(_exists(tokenId), "Nonexistent token");
 
-        return (owner(), SafeMath.div(SafeMath.mul(salePrice, 75), 1000));
+        return (
+            multisigReceiverAddress,
+            SafeMath.div(SafeMath.mul(salePrice, 75), 1000)
+        );
     }
 }
 

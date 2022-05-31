@@ -345,9 +345,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint8",
+        "internalType": "uint256",
         "name": "numberOfTokens",
-        "type": "uint8"
+        "type": "uint256"
       },
       {
         "internalType": "bytes32[]",
@@ -363,9 +363,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint8",
+        "internalType": "uint256",
         "name": "numberOfTokens",
-        "type": "uint8"
+        "type": "uint256"
       },
       {
         "internalType": "bytes32[]",
