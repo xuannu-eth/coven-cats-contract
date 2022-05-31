@@ -1,20 +1,17 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { Contract } from "ethers";
 
 import { CATS, SalePhase } from "../src/contractConstants";
 import { generateMerkleTree } from "../src/merkle";
-import {
-  getCovenCats,
-  ContractUtils,
-} from "../src/ContractUtils";
+import { getCovenCats, ContractUtils } from "../src/ContractUtils";
 import * as TestUtils from "./utils/CovenCatsTestUtils";
-import { CovenCats } from "../typechain";
 
 const { WITCH_SALE_PRICE_ETH, PUBLIC_SALE_PRICE_ETH } = CATS;
 
 describe("CovenCats", function () {
-  let contract: CovenCats;
-  let CovenCats: ContractUtils<CovenCats>;
+  let contract: Contract;
+  let CovenCats: ContractUtils<Contract>;
   beforeEach(async () => {
     CovenCats = await getCovenCats();
     contract = await CovenCats.deploy();
@@ -180,9 +177,7 @@ describe("CovenCats", function () {
     let merkleTree: { [key: string]: string[] } = {};
     beforeEach(async () => {
       const [_owner, ...users] = await ethers.getSigners();
-      const witchListAddresses = users
-        .slice(0, 10)
-        .map((u: any) => u.address);
+      const witchListAddresses = users.slice(0, 10).map((u: any) => u.address);
       const [root, tree] = generateMerkleTree(witchListAddresses);
       merkleTree = tree;
       await TestUtils.setWitchListMerkleRoot(contract, root);
@@ -190,7 +185,7 @@ describe("CovenCats", function () {
 
     it("mints correctly when witch sale is active", async () => {
       // Activate sale
-      await TestUtils.setSalePhase(contract, SalePhase.WITCH)
+      await TestUtils.setSalePhase(contract, SalePhase.WITCH);
       const [_owner, user] = await ethers.getSigners();
 
       // Grab current eth balance on the contract
@@ -214,9 +209,7 @@ describe("CovenCats", function () {
       const userCovenBalance = await contract.balanceOf(user.address);
       expect(
         newEthBalance.eq(
-          currentEthBalance.add(
-            ethers.utils.parseEther(WITCH_SALE_PRICE_ETH)
-          )
+          currentEthBalance.add(ethers.utils.parseEther(WITCH_SALE_PRICE_ETH))
         )
       ).to.be.true;
       expect(userCovenBalance.eq(1)).to.be.true;
@@ -570,5 +563,4 @@ describe("CovenCats", function () {
       );
     });
   });
-
 });

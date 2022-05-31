@@ -1,24 +1,24 @@
 import "@nomiclabs/hardhat-ethers";
-import { ethers } from "hardhat";
-import { CovenCats } from "../typechain";
+import { ethers, upgrades } from "hardhat";
 
 import { OPEN_SEA_PROXY_REGISTRY_ADDRESS } from "./Env";
 import { CATS_CONTRACT_NAME } from "./contractConstants";
+import { Contract } from "ethers";
 
-type ContractType = CovenCats;
-
-export interface ContractUtils<TContract extends ContractType> {
+export interface ContractUtils<TContract extends Contract> {
   deploy(): Promise<TContract>;
 
   attach(contractAddress: string): TContract;
 }
 
-export async function getCovenCats(): Promise<ContractUtils<CovenCats>> {
+export async function getCovenCats(): Promise<ContractUtils<Contract>> {
   const Contract = await ethers.getContractFactory(CATS_CONTRACT_NAME);
   return {
     deploy: async () => {
       // Deploy a new smart contract, connected to the first signer by default
-      const contract = await Contract.deploy();
+      const contract = await upgrades.deployProxy(Contract, [
+        OPEN_SEA_PROXY_REGISTRY_ADDRESS,
+      ]);
 
       await contract.deployed();
 

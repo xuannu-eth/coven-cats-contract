@@ -2,6 +2,8 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
+import "@openzeppelin/hardhat-upgrades";
+
 import chalk from "chalk";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import type { HardhatRuntimeEnvironment } from "hardhat/types";
@@ -33,7 +35,7 @@ function getABITargetLocation(contractName: string): string {
 function getContractNameFromArg(contract: string): string {
   let contractName;
   switch (contract) {
-    case "witches":
+    case "cats":
       contractName = CATS_CONTRACT_NAME;
       break;
     default:
@@ -91,16 +93,6 @@ task("accounts", "Prints the list of accounts", async (_taskArgs, hre) => {
   for (const account of accounts) {
     console.log(account.address);
   }
-});
-
-task(
-  "get-rollover-addresses",
-  "Grabs addresses to issue new tokens in rollover mint"
-).setAction(async (_args, hre) => {
-  await hre.run(TASK_RUN, {
-    script: "scripts/get-rollover-addresses.ts",
-    network: hre.network,
-  });
 });
 
 task("coven-compile", "Copies compiled artifacts to the client directory")
@@ -296,9 +288,7 @@ task(
     let constructorArguments;
     switch (args.contract) {
       case "witches":
-        constructorArguments = [
-          OPEN_SEA_PROXY_REGISTRY_ADDRESS,
-        ];
+        constructorArguments = [OPEN_SEA_PROXY_REGISTRY_ADDRESS];
         break;
       case "items":
         constructorArguments = [OPEN_SEA_PROXY_REGISTRY_ADDRESS];

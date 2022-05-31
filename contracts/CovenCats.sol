@@ -7,14 +7,19 @@ import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract CovenCats is ERC721AUpgradeable, IERC2981, Ownable, ReentrancyGuard {
+contract CovenCats is
+    ERC721AUpgradeable,
+    IERC2981,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable
+{
     using Strings for uint256;
 
     string private baseURI;
@@ -35,7 +40,7 @@ contract CovenCats is ERC721AUpgradeable, IERC2981, Ownable, ReentrancyGuard {
         WITCH,
         OFF
     }
-    SalePhase public salePhase = SalePhase.OFF;
+    SalePhase public salePhase;
 
     uint256 public constant PUBLIC_SALE_PRICE = 0.07 ether;
     bytes32 public meowlistSaleMerkleRoot;
@@ -112,12 +117,17 @@ contract CovenCats is ERC721AUpgradeable, IERC2981, Ownable, ReentrancyGuard {
         _;
     }
 
-    function initialize(address _openSeaProxyRegistryAddress) public initializerERC721A {
+    function initialize(address _openSeaProxyRegistryAddress)
+        public
+        initializerERC721A
+    {
         require(!initialized, "Contract instance has already been initialized");
         initialized = true;
         __ERC721A_init("Coven Cats", "CAT");
+
         isOpenSeaProxyActive = true;
         openSeaProxyRegistryAddress = _openSeaProxyRegistryAddress;
+        salePhase = SalePhase.OFF;
     }
 
     // ============ PUBLIC FUNCTIONS FOR MINTING ============
@@ -283,12 +293,14 @@ contract CovenCats is ERC721AUpgradeable, IERC2981, Ownable, ReentrancyGuard {
 
         return super.isApprovedForAll(owner, operator);
     }
+
     /**
      * @dev See {ERC721AUpgradeable-_startTokenId}
      */
-     function _startTokenId() internal view virtual override returns (uint256){
-         return 1;
-     }
+    function _startTokenId() internal view virtual override returns (uint256) {
+        return 1;
+    }
+
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
