@@ -3,7 +3,7 @@
 
 pragma solidity ^0.8.4;
 
-import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 
@@ -11,23 +11,23 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract CovenCats is
-    ERC721AUpgradeable,
+    ERC721Upgradeable,
     IERC2981,
     OwnableUpgradeable,
     ReentrancyGuardUpgradeable
 {
+    using Counters for Counters.Counter;
     using Strings for uint256;
 
-    string private baseURI;
-    string public verificationHash;
-    address private openSeaProxyRegistryAddress;
-    bool private isOpenSeaProxyActive;
+    Counters.Counter private tokenCounter;
 
-    bool private initialized;
+    string private baseURI;
+    bool private isOpenSeaProxyActive;
 
     uint256 public constant MAX_CATS_PER_PHASE = 3;
     uint256 public constant MAX_CATS = 9999;
@@ -78,7 +78,7 @@ contract CovenCats is
 
     modifier canMintCats(uint256 numberOfTokens) {
         require(
-            totalSupply() + numberOfTokens <=
+            tokenCounter.current() + numberOfTokens <=
                 MAX_CATS - MAX_GIFTED_CATS + numGiftedCats,
             "Not enough cats remaining to mint"
         );
@@ -91,7 +91,7 @@ contract CovenCats is
             "Not enough cats remaining to gift"
         );
         require(
-            totalSupply() + num <= MAX_CATS,
+            tokenCounter.current() + num <= MAX_CATS,
             "Not enough cats remaining to mint"
         );
         _;
@@ -117,16 +117,12 @@ contract CovenCats is
         _;
     }
 
-    function initialize(address _openSeaProxyRegistryAddress)
-        public
-        initializerERC721A
-    {
-        require(!initialized, "Contract instance has already been initialized");
-        initialized = true;
-        __ERC721A_init("Coven Cats", "CAT");
+    function initialize() public initializer {
+        __ERC721_init_unchained("Coven Cats", "CAT");
+        __Ownable_init_unchained();
+        __ReentrancyGuard_init_unchained();
 
         isOpenSeaProxyActive = true;
-        openSeaProxyRegistryAddress = _openSeaProxyRegistryAddress;
         salePhase = SalePhase.OFF;
     }
 
@@ -142,7 +138,9 @@ contract CovenCats is
         maxCatsPerPhase(numberOfTokens)
     {
         mintCounts[mintCountsIdentifier()] += numberOfTokens;
-        _safeMint(msg.sender, numberOfTokens);
+        for (uint256 i = 0; i < numberOfTokens; i++) {
+            _safeMint(msg.sender, nextTokenId());
+        }
     }
 
     function mintMeowlistSale(
@@ -159,7 +157,9 @@ contract CovenCats is
         isValidMerkleProof(merkleProof, meowlistSaleMerkleRoot)
     {
         mintCounts[mintCountsIdentifier()] += numberOfTokens;
-        _safeMint(msg.sender, numberOfTokens);
+        for (uint256 i = 0; i < numberOfTokens; i++) {
+            _safeMint(msg.sender, nextTokenId());
+        }
     }
 
     function mintWitchSale(uint8 numberOfTokens, bytes32[] calldata merkleProof)
@@ -173,13 +173,19 @@ contract CovenCats is
         isValidMerkleProof(merkleProof, witchSaleMerkleRoot)
     {
         mintCounts[mintCountsIdentifier()] += numberOfTokens;
-        _safeMint(msg.sender, numberOfTokens);
+        for (uint256 i = 0; i < numberOfTokens; i++) {
+            _safeMint(msg.sender, nextTokenId());
+        }
     }
 
     // ============ PUBLIC READ-ONLY FUNCTIONS ============
 
     function getBaseURI() external view returns (string memory) {
         return baseURI;
+    }
+
+    function getLastTokenId() external view returns (uint256) {
+        return tokenCounter.current();
     }
 
     // ============ OWNER-ONLY ADMIN FUNCTIONS ============
@@ -195,13 +201,6 @@ contract CovenCats is
         onlyOwner
     {
         isOpenSeaProxyActive = _isOpenSeaProxyActive;
-    }
-
-    function setVerificationHash(string memory _verificationHash)
-        external
-        onlyOwner
-    {
-        verificationHash = _verificationHash;
     }
 
     function setSalePhase(SalePhase newPhase) external onlyOwner {
@@ -223,7 +222,9 @@ contract CovenCats is
         canGiftCats(numToReserve)
     {
         numGiftedCats += numToReserve;
-        _safeMint(msg.sender, numToReserve);
+        for (uint256 i = 0; i < numToReserve; i++) {
+            _safeMint(msg.sender, nextTokenId());
+        }
     }
 
     function giftCats(address[] calldata addresses)
@@ -236,7 +237,7 @@ contract CovenCats is
         numGiftedCats += numToGift;
 
         for (uint256 i = 0; i < numToGift; i++) {
-            _safeMint(addresses[i], 1);
+            _safeMint(addresses[i], nextTokenId());
         }
     }
 
@@ -252,6 +253,11 @@ contract CovenCats is
 
     // ============ SUPPORTING FUNCTIONS ============
 
+    function nextTokenId() private returns (uint256) {
+        tokenCounter.increment();
+        return tokenCounter.current();
+    }
+
     function mintCountsIdentifier() private view returns (string memory) {
         return string(abi.encodePacked(msg.sender, "-", salePhase));
     }
@@ -262,7 +268,7 @@ contract CovenCats is
         public
         view
         virtual
-        override(ERC721AUpgradeable, IERC165)
+        override(ERC721Upgradeable, IERC165)
         returns (bool)
     {
         return
@@ -282,7 +288,7 @@ contract CovenCats is
         // Get a reference to OpenSea's proxy registry contract by instantiating
         // the contract using the already existing address.
         ProxyRegistry proxyRegistry = ProxyRegistry(
-            openSeaProxyRegistryAddress
+            0xa5409ec958C83C3f309868babACA7c86DCB077c1
         );
         if (
             isOpenSeaProxyActive &&
@@ -292,13 +298,6 @@ contract CovenCats is
         }
 
         return super.isApprovedForAll(owner, operator);
-    }
-
-    /**
-     * @dev See {ERC721AUpgradeable-_startTokenId}
-     */
-    function _startTokenId() internal view virtual override returns (uint256) {
-        return 1;
     }
 
     /**
@@ -328,10 +327,8 @@ contract CovenCats is
     {
         require(_exists(tokenId), "Nonexistent token");
 
-        return (address(this), SafeMath.div(SafeMath.mul(salePrice, 75), 1000));
+        return (owner(), SafeMath.div(SafeMath.mul(salePrice, 75), 1000));
     }
-
-    receive() external payable {}
 }
 
 // These contract definitions are used to create a reference to the OpenSea

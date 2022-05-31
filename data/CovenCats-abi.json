@@ -1,70 +1,5 @@
 [
   {
-    "inputs": [],
-    "name": "ApprovalCallerNotOwnerNorApproved",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ApprovalQueryForNonexistentToken",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ApprovalToCurrentOwner",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ApproveToCaller",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "BalanceQueryForZeroAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "MintToZeroAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "MintZeroQuantity",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "OwnerQueryForNonexistentToken",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "TransferCallerNotOwnerNorApproved",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "TransferFromIncorrectOwner",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "TransferToNonERC721ReceiverImplementer",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "TransferToZeroAddress",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "URIQueryForNonexistentToken",
-    "type": "error"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {
@@ -306,6 +241,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getLastTokenId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address[]",
@@ -319,13 +267,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_openSeaProxyRegistryAddress",
-        "type": "address"
-      }
-    ],
+    "inputs": [],
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -680,19 +622,6 @@
   {
     "inputs": [
       {
-        "internalType": "string",
-        "name": "_verificationHash",
-        "type": "string"
-      }
-    ],
-    "name": "setVerificationHash",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes32",
         "name": "merkleRoot",
         "type": "bytes32"
@@ -755,19 +684,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "totalSupply",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -805,19 +721,6 @@
   },
   {
     "inputs": [],
-    "name": "verificationHash",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "witchSaleMerkleRoot",
     "outputs": [
       {
@@ -848,9 +751,5 @@
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
-  },
-  {
-    "stateMutability": "payable",
-    "type": "receive"
   }
 ]
