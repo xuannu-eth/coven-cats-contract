@@ -86,7 +86,6 @@ contract CovenCats is
     uint256 public constant MAX_CATS = 9999;
     uint256 public constant MAX_GIFTED_CATS = 666;
     uint256 public numGiftedCats;
-    address private multiSigAddress;
 
     enum SalePhase {
         PUBLIC,
@@ -103,6 +102,10 @@ contract CovenCats is
     bytes32 public witchSaleMerkleRoot;
 
     mapping(string => uint256) public mintCounts;
+    
+    // ============ V2 UPGRADED STORAGE SLOTS  ================
+
+    address private multiSigAddress;
 
     // ============ ACCESS CONTROL/SANITY MODIFIERS ============
 
