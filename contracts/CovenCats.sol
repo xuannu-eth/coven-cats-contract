@@ -86,6 +86,7 @@ contract CovenCats is
     uint256 public constant MAX_CATS = 9999;
     uint256 public constant MAX_GIFTED_CATS = 666;
     uint256 public numGiftedCats;
+    address private multiSigAddress;
 
     enum SalePhase {
         PUBLIC,
@@ -251,6 +252,10 @@ contract CovenCats is
         witchSaleMerkleRoot = merkleRoot;
     }
 
+    function setMultiSigReceiverAddress(address _multiSigAddress) external onlyOwner {
+        multiSigAddress = _multiSigAddress;
+    }
+
     function giftCats(address[] calldata addresses)
         external
         nonReentrant
@@ -269,13 +274,13 @@ contract CovenCats is
         uint256 balance = address(this).balance;
         if (balance == 0) revert PaymentBalanceZero();
 
-        (bool success, ) = multisigReceiverAddress.call{value: balance}("");
+        (bool success, ) = multiSigAddress.call{value: balance}("");
         if (!success) revert PaymentBalanceZero();
     }
 
     function withdrawTokens(IERC20 token) public onlyOwner {
         uint256 balance = token.balanceOf(address(this));
-        token.transfer(multisigReceiverAddress, balance);
+        token.transfer(multiSigAddress, balance);
     }
 
     // ============ SUPPORTING FUNCTIONS ============
