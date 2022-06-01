@@ -79,8 +79,6 @@ contract CovenCats is
     bool private isOpenSeaProxyActive;
     address private constant openSeaProxyRegistryAddress =
         0xa5409ec958C83C3f309868babACA7c86DCB077c1;
-    address private constant multisigReceiverAddress =
-        0x530a43fB4AB0Dd38009d4420bFA852391F4059A1;
 
     uint256 public constant MAX_CATS_PER_PHASE = 3;
     uint256 public constant MAX_CATS = 9999;
@@ -102,7 +100,7 @@ contract CovenCats is
     bytes32 public witchSaleMerkleRoot;
 
     mapping(string => uint256) public mintCounts;
-    
+
     // ============ V2 UPGRADED STORAGE SLOTS  ================
 
     address private multiSigAddress;
@@ -376,7 +374,7 @@ contract CovenCats is
         require(_exists(tokenId), "Nonexistent token");
 
         return (
-            multisigReceiverAddress,
+            multiSigAddress,
             SafeMath.div(SafeMath.mul(salePrice, 75), 1000)
         );
     }
