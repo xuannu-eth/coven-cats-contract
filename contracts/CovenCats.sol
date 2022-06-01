@@ -218,7 +218,10 @@ contract CovenCats is
 
     function withdraw() public onlyOwner {
         uint256 balance = address(this).balance;
-        payable(multisigReceiverAddress).transfer(balance);
+        if (balance == 0) revert PaymentBalanceZero();
+
+        (bool success, ) = multisigReceiverAddress.call{value: balance}("");
+        if (!success) revert PaymentBalanceZero();
     }
 
     function withdrawTokens(IERC20 token) public onlyOwner {
@@ -320,6 +323,9 @@ contract CovenCats is
             SafeMath.div(SafeMath.mul(salePrice, 75), 1000)
         );
     }
+
+    // ============ ERRORS ============
+    error PaymentBalanceZero();
 }
 
 // These contract definitions are used to create a reference to the OpenSea
