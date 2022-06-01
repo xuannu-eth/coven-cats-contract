@@ -225,6 +225,79 @@ task(
   });
 
 task(
+  "coven-upgrade",
+  "Upgrades contract and starts console with coven-specific configs"
+)
+  .addPositionalParam(
+    "contract",
+    "Contract to deploy. Possible values: witches, items."
+  )
+  .addPositionalParam(
+    "proxyContractAddress",
+    "The address of the proxy contract to upgrade."
+  )
+  .setAction(async (args, hre) => {
+    if (hre.network.name === "localhost") {
+      connectLocalDevWallet(hre);
+    }
+
+    if (!args.contract) {
+      throw new Error(
+        "Missing value for required positional argument: 'contract'."
+      );
+    }
+
+    const contractName = getContractNameFromArg(args.contract);
+
+    const signer = hre.ethers.provider.getSigner();
+    const address = await signer.getAddress();
+    const contractMetadataLocation = `./data/${contractName}-metadata-${hre.network.name}.json`;
+    const contractMetadataLatestDeployedLocation = `./data/${contractName}-latest-deployed.txt`;
+
+    console.log("");
+    console.log(
+      `Upgrading contract ` + chalk.bold.greenBright(contractName) + "..."
+    );
+    console.log(`NETWORK: ${hre.network.name}`);
+    console.log(`SIGNER: ${address}`);
+    console.log("");
+
+    try {
+      const { getCovenCats } = require("./src/ContractUtils");
+      const CovenCats = await getCovenCats();
+      const contract = await CovenCats.upgrade(args.proxyContractAddress);
+
+      writeFileSync(
+        contractMetadataLocation,
+        JSON.stringify(
+          {
+            network: hre.network.name,
+            address: contract.address,
+          },
+          null,
+          2
+        )
+      );
+      writeFileSync(contractMetadataLatestDeployedLocation, contract.address);
+
+      console.log(
+        "Contract deployed to address: ",
+        chalk.bold.greenBright(contract.address)
+      );
+    } catch (e) {
+      console.log(chalk.red("Error deploying contract: " + e));
+    }
+
+    await hre.run("coven-compile", {
+      noCompile: true,
+      contractName: contractName,
+    });
+
+    printConsoleSummary();
+    await hre.run(TASK_CONSOLE, { network: hre.network, noCompile: true });
+  });
+
+task(
   "coven-verify",
   "Deploys contract and starts console with coven-specific configs"
 )
