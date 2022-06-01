@@ -8,6 +8,8 @@ export interface ContractUtils<TContract extends Contract> {
   deploy(): Promise<TContract>;
 
   attach(contractAddress: string): TContract;
+
+  upgrade(address: string): Promise<TContract>;
 }
 
 export async function getCovenCats(): Promise<ContractUtils<Contract>> {
@@ -24,6 +26,11 @@ export async function getCovenCats(): Promise<ContractUtils<Contract>> {
 
     attach: (contractAddress: string) => {
       return Contract.attach(contractAddress);
+    },
+
+    upgrade: async (address: string) => {
+      const upgradedContract = await upgrades.upgradeProxy(address, Contract);
+      return upgradedContract;
     },
   };
 }
