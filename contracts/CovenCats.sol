@@ -86,7 +86,6 @@ contract CovenCats is
     uint256 public constant MAX_CATS = 9999;
     uint256 public constant MAX_GIFTED_CATS = 666;
     uint256 public numGiftedCats;
-    
 
     enum SalePhase {
         PUBLIC,
