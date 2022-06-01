@@ -1,5 +1,10 @@
 [
   {
+    "inputs": [],
+    "name": "PaymentBalanceZero",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -439,19 +444,6 @@
   {
     "inputs": [],
     "name": "renounceOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "numToReserve",
-        "type": "uint256"
-      }
-    ],
-    "name": "reserveForGifting",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
